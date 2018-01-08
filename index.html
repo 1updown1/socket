@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>聊天室</title>
+    <style>
+        html,body,ul,li,ol,p,input{
+            padding: 0;
+            margin: 0;
+        }
+        ul,li{
+            list-style: none;
+        }
+        .clear:after{
+            clear: both;
+            content: '';
+            display: block;
+        }
+        body{
+            background: #f7f7f7;
+        }
+        .container{
+            width: 80%;
+            height: 100vh;
+            margin: 0 auto;
+            position: relative;
+            background: white;
+        }
+        .chatbox{
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 100px;
+            right: 0;
+            padding: 20px 20px 0 20px;
+            overflow: auto;
+        }
+        .chatbox li{
+            position: relative;
+            width: 100%;
+        }
+        .chatbox li span:first-child{
+            color: violet;
+            float: left;
+            width: 70px;
+            height: 20px;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .chatbox li span:last-child{
+            float: left;
+            width: 100%;
+            margin-left: -70px;
+            padding-left: 80px;
+            box-sizing: border-box;
+        }
+
+        .sendbox{
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100px;
+        }
+        .sendbox input{
+            outline: none;
+            position: absolute;
+            width: auto;
+            height: 28px;
+            left: 10px;
+            bottom: 35px;
+            width: 80%;
+        }
+        .sendbox .btn{
+            width: 10%;
+            height: 30px;
+            background: green;
+            color: white;
+            line-height: 30px;
+            position: absolute;
+            bottom: 35px;
+            right: 5%;
+            border-radius: 15px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <ul class="chatbox">
+        </ul>
+        <div class="sendbox">
+            <input type="text" id="ipt">
+            <div class="btn">发送</div>
+        </div>
+    </div>
+</body>
+<script>
+    var ul = document.getElementsByClassName('chatbox')[0];
+    var btn = document.getElementsByClassName('btn')[0];
+    var ws = new WebSocket('ws://10.0.8.70:8091');
+
+    if(window.ontouchstart){
+        btn.ontouchstart = send;
+    }else{
+        btn.onclick = send;
+    }
+
+    ws.onopen = function () {
+        console.log("连接状态", ws);
+        console.log(ws.readyState)
+        console.log("open");
+        // ws.send('hello');
+    };
+    ws.onmessage = function (evt) {
+        console.log(evt.data);  
+        // alert(evt.data);  
+        var data = JSON.parse(evt.data);
+        var html = ul.innerHTML;
+        if(data.type == 'admin'){
+            ul.innerHTML = html + '<li class="clear"><span>系统</span><span>' + data.data + '</span></li>'
+        }else if(data.type == 'message'){
+            ul.innerHTML = html + '<li class="clear"><span>' + data.data.name + '</span><span>' + data.data.message + '</span></li>';
+        }
+    };
+    ws.onclose = function (evt) {
+        console.log("WebSocketClosed!");
+        console.log(evt);
+    };
+    ws.onerror = function (evt) {
+        console.log("WebSocketError!");
+        console.log(evt);
+    };
+
+    function send() {
+        // var msg = $("#message").val();
+        // var key = $("#token").val();
+        // var name = $("#name").val();
+        // var str = "{name:'" + name + "',msg:'" + msg + "',key:'" + key + "'}";
+        var str = document.getElementById('ipt').value;
+        if(str) ws.send(str);
+    };
+
+    function exit() {
+        var r = ws.close();
+        console.log("退出", r);
+    }  
+</script>
+</html>
